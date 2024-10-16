@@ -18,4 +18,4 @@ Departs from a "platform perspectivist" approach: studying one platform through 
    - URL to a 4CAT server that runs the [Screenshot Generator extension](https://github.com/digitalmethodsinitiative/4cat_web_studies_extensions).
 
 3. Set other config options (like `TEMPERATURE` or `MIN_TOXICITY`).
-4. Run `start.py`. Do this over time to keep track of emerging questions posed  
+4. Run `start.py`. Do this over time to keep track of emerging radical questions and how search engines respond to these. 
