@@ -9,7 +9,7 @@ Departs from a "platform perspectivist" approach: studying one platform through 
 ## Install and run
 1. Install dependencies:
 
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 2. Copy-paste `config-example.py`, rename it to `config.py`, and insert the required variables:
    - OpenAI API key
