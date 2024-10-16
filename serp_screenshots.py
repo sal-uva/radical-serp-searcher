@@ -42,17 +42,23 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 	for question in questions.values():
 		query_questions.append(query_to_search_url(question["question_simplified_contextualized"], search_engine=search_engine))
 
-	label = f"serp-screenshots_{search_engine}_f{timestamp}"
+	if not query_questions:
+		print("No questions above the thresholds")
+		quit()
+
+	ignore_cookies = True
+	if "bing" in search_engine:
+		ignore_cookies = False
 
 	query_4cat = {
 		"datasource": "image-downloader-screenshots",
 		"query": "\n".join(query_questions),
 		"capture": "all",
-		"window": "1920x1080",
-		"wait-time": 10,
-		"pause-time": 15,
-		"ignore-cookies": True,
-		"frontend-confirm": True
+		"wait-time": 6,
+		"pause-time": 10,
+		"ignore-cookies": ignore_cookies,
+		"frontend-confirm": True,
+		"label": f"serp-screenshots_{search_engine}_f{timestamp}"
 	}
 
 	url_4cat = config.URL_4CAT + "/api/queue-query"

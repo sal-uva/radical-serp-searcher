@@ -35,7 +35,7 @@ if __name__ == '__main__':
 	processed_files = glob.glob("data/catalogs/**/*.json")
 	for f in glob.glob("data/catalogs/**/*.json"):
 		file_name = f.split(".")[-2] + ".csv"
-		if file_name not in processed_files:
+		if file_name not in processed_files and "questions" not in file_name:
 			unprocessed_catalog_files.append(f)
 
 	# Get questions from OPs and manipulate them with LLMs
@@ -49,8 +49,9 @@ if __name__ == '__main__':
 	# Only keep those above set threshold in config
 	questions = questions_above_thresholds(questions)
 
-	# Generate screenshots via 4CAT
-	for search_engine in config.SEARCH_ENGINES:
-		serp_screenshots.queue_screenshots_via_4cat(questions, search_engine=search_engine)
+	if questions:
+		# Generate screenshots via 4CAT
+		for search_engine in config.SEARCH_ENGINES:
+			serp_screenshots.queue_screenshots_via_4cat(questions, search_engine=search_engine)
 
 	print("Done (for now)")

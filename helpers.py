@@ -21,9 +21,6 @@ def make_dirs():
 	if not os.path.isdir("data/catalogs/leftypol"):
 		os.mkdir("data/catalogs/leftypol")
 
-	if not os.path.isdir("data/catalog_questions"):
-		os.mkdir("data/catalog_questions")
-
 
 def questions_above_thresholds(questions: dict) -> dict:
 	"""
