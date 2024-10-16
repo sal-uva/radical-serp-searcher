@@ -134,7 +134,7 @@ def get_toxicity_scores(texts: list) -> list:
 		print(f"  Scored {i}/{len(texts)} questions")
 
 		# Don't exceed the rate limit
-		time.sleep(1)
+		time.sleep(3)
 
 	return results
 
