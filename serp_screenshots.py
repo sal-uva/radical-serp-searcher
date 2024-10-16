@@ -58,7 +58,7 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 		"pause-time": 10,
 		"ignore-cookies": ignore_cookies,
 		"frontend-confirm": True,
-		"label": f"serp-screenshots_{search_engine}_f{timestamp}"
+		"label": f"serp-screenshots_{search_engine}_{timestamp}"
 	}
 
 	url_4cat = config.URL_4CAT + "/api/queue-query"
