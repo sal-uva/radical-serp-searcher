@@ -1,11 +1,10 @@
 # Radical SERP Searcher
-
-## What it does:
 - Extract questions from imageboards.
 - Transform them into queryable phrases.
-- Take screenshots of the SERPs of different search engines via [4CAT](https://github.com/digitalmethodsinitiative/4cat/). 
+- Search these questions on different search engines
+- Take screenshots of the SERP via [4CAT](https://github.com/digitalmethodsinitiative/4cat/). 
 
-Departs from the assumption of "platform perspectivism": studying one platform through the lens of another.
+Departs from a "platform perspectivist" approach: studying one platform through the lens of another.
 
 ## Install and run
 1. Install dependencies:
