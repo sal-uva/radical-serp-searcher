@@ -176,13 +176,11 @@ def process(catalog_file: str):
 	a full list of extracted and manipulated questions will be found in `data/questions.json` and `data/questions.csv`.
 
 	"""
-	print("Processing " + catalog_file)
 	catalog = json.load(open(catalog_file))
 	ops = parse_ops_from_catalog(catalog)
 
 	# Only keep OPs that generated X replies
 	ops = [op for op in ops if op["replies"] >= config.MIN_REPLIES]
-	print(f"  Kept {len(ops)} OPs with {config.MIN_REPLIES} or more replies")
 
 	# Extract questions
 	for i in range(len(ops)):
@@ -190,7 +188,6 @@ def process(catalog_file: str):
 
 	# Only keep OPs with questions
 	ops = [op for op in ops if op["questions"]]
-	print(f"  Kept {len(ops)} OPs with questions")
 
 	# Skip OPs with questions and enough replies that we've processed before
 	processed_ops_json = "data/processed_ids.json"
@@ -198,7 +195,7 @@ def process(catalog_file: str):
 		json.dump([], open(processed_ops_json, "w"))
 	processed_ops = json.load(open(processed_ops_json))
 	ops = [op for op in ops if op["id"] not in processed_ops]
-	print(f"  Kept {len(ops)} OPs that we haven't processed before")
+	print(f"Processing new {len(ops)} OPs from {catalog_file}")
 
 	if not ops:
 		return
