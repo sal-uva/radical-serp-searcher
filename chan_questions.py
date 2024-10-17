@@ -195,10 +195,11 @@ def process(catalog_file: str):
 		json.dump([], open(processed_ops_json, "w"))
 	processed_ops = json.load(open(processed_ops_json))
 	ops = [op for op in ops if op["id"] not in processed_ops]
-	print(f"Processing new {len(ops)} OPs from {catalog_file}")
 
 	if not ops:
 		return
+
+	print(f"Processing new {len(ops)} OPs from {catalog_file}")
 
 	# Create a dictionary *per question* instead of per OP
 	questions = []
