@@ -120,14 +120,18 @@ def get_toxicity_scores(texts: list) -> list:
 			"requestedAttributes": api_attributes
 		}
 
+		response = None
 		try:
 			response = client.comments().analyze(body=analyze_request).execute()
 		except HttpError as e:
-			raise Exception(e)
+			print("  Couldn't score toxicity: ", str(e))
 
 		result = {}
 		for attribute in attributes:
-			result[attribute] = float(response["attributeScores"][attribute]["summaryScore"]["value"])
+			if response:
+				result[attribute] = float(response["attributeScores"][attribute]["summaryScore"]["value"])
+			else:
+				result[attribute] = ""
 
 		results.append(result)
 		i += 1
@@ -335,7 +339,7 @@ def process(catalog_file: str):
 				"subject": question["subject"],
 				"subjects_all": [question["subject"]],
 				"explicit": question["explicit"],
-				"explicit_all": question["explicit"],
+				"explicit_all": [question["explicit"]],
 				**[question["toxicity"]][0],
 				"questions_original": [question["question"]],
 				"ids": [question["id"]],
