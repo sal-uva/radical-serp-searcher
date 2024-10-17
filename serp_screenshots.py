@@ -55,6 +55,7 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 		"query": "\n".join(query_questions),
 		"capture": "all",
 		"wait-time": 6,
+		"resolution": "1920x1080",
 		"pause-time": 10,
 		"ignore-cookies": ignore_cookies,
 		"frontend-confirm": True,
