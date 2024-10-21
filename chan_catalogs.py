@@ -16,7 +16,7 @@ def collect():
 
 	catalogs = config.CATALOGS
 
-	for catalog_url in catalogs:
+	for catalog_name, catalog_url in catalogs.items():
 
 		current_time = int(time.time())
 		catalog = []
@@ -26,13 +26,7 @@ def collect():
 		except Exception as e:
 			print(e)
 
-		imgboard = "undefined"
-		if "leftypol" in catalog_url:
-			imgboard = "leftypol"
-		elif "4cdn" in catalog_url:
-			imgboard = "4chanpol"
-
-		out_name = f"data/catalogs/{imgboard}/{current_time}.json"
+		out_name = f"data/catalogs/{catalog_name}/{catalog_name}_{current_time}.json"
 
 		if catalog:
 			with open(out_name, "w", encoding="utf-8") as f:

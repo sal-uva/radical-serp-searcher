@@ -14,15 +14,12 @@ def make_dirs():
 	# Make dirs
 	if not os.path.isdir("data"):
 		os.mkdir("data")
+
 	if not os.path.isdir("data/catalogs"):
 		os.mkdir("data/catalogs")
-	if not os.path.isdir("data/catalogs/4chanpol"):
-		os.mkdir("data/catalogs/4chanpol")
-	if not os.path.isdir("data/catalogs/leftypol"):
-		os.mkdir("data/catalogs/leftypol")
-
-	if not os.path.isdir("data/catalog_questions"):
-		os.mkdir("data/catalog_questions")
+	for board in list(config.CATALOGS.keys()):
+		if not os.path.isdir("data/catalogs/" + board):
+			os.mkdir("data/catalogs/" + board)
 
 
 def questions_above_thresholds(questions: dict) -> dict:

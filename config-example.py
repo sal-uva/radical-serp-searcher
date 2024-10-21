@@ -1,8 +1,8 @@
 # What imageboard catalogs we should take into account
-CATALOGS = [
-	"https://leftypol.org/leftypol/catalog.json",
-	"https://a.4cdn.org/pol/catalog.json"
-]
+CATALOGS = {
+	"leftypol": "https://leftypol.org/leftypol/catalog.json",
+	"4chan/pol/": "https://a.4cdn.org/pol/catalog.json"
+}
 
 # What search engines we should consider
 SEARCH_ENGINES = ["google", "bing"]

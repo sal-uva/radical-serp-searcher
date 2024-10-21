@@ -120,21 +120,25 @@ def get_toxicity_scores(texts: list) -> list:
 			"requestedAttributes": api_attributes
 		}
 
+		response = None
 		try:
 			response = client.comments().analyze(body=analyze_request).execute()
 		except HttpError as e:
-			raise Exception(e)
+			print("  Couldn't score toxicity: ", str(e))
 
 		result = {}
 		for attribute in attributes:
-			result[attribute] = float(response["attributeScores"][attribute]["summaryScore"]["value"])
+			if response:
+				result[attribute] = float(response["attributeScores"][attribute]["summaryScore"]["value"])
+			else:
+				result[attribute] = ""
 
 		results.append(result)
 		i += 1
 		print(f"  Scored {i}/{len(texts)} questions")
 
 		# Don't exceed the rate limit
-		time.sleep(1)
+		time.sleep(3)
 
 	return results
 
@@ -162,29 +166,6 @@ def parse_ops_from_catalog(in_catalog: list) -> list:
 	return ops
 
 
-def filter_ops(ops: list) -> list:
-	"""
-	Takes a list of OP data and filters it for:
-	- We've processed them before
-	- The minimum number of replies (defined in `config.py`)
-
-	"""
-
-	# Check what IDs are already processed
-	# These are stored separately, because OP IDs without questions
-	# won't be stored in the questions JSON and CSV.
-	processed_ops = json.load(open("data/processed_ops.json", "r"))
-	print(f"  Already processed {len(processed_ops)} OPs")
-	ops = [op for op in ops if op["id"] not in processed_ops]
-	print(f"  Kept {len(ops)} unprocessed OPs")
-
-	# Only keep OPs that generated X replies
-	ops = [op for op in ops if op["replies"] >= config.MIN_REPLIES]
-	print(f"  Kept {len(ops)} OPs with {config.MIN_REPLIES} or more replies")
-
-	return ops
-
-
 def process(catalog_file: str):
 	"""
 
@@ -195,22 +176,11 @@ def process(catalog_file: str):
 	a full list of extracted and manipulated questions will be found in `data/questions.json` and `data/questions.csv`.
 
 	"""
-	print("Processing " + catalog_file)
-
 	catalog = json.load(open(catalog_file))
 	ops = parse_ops_from_catalog(catalog)
-	op_ids = [op["id"] for op in ops]
 
-	# Keep track of what threads we've already encountered
-	processed_ops_json = "data/processed_ops.json"
-	if not os.path.isfile(processed_ops_json):
-		processed_ops = []
-		json.dump(processed_ops, open(processed_ops_json, "w"))
-	else:
-		processed_ops = json.load(open(processed_ops_json))
-
-	# Filter
-	ops = filter_ops(ops)
+	# Only keep OPs that generated X replies
+	ops = [op for op in ops if op["replies"] >= config.MIN_REPLIES]
 
 	# Extract questions
 	for i in range(len(ops)):
@@ -218,6 +188,18 @@ def process(catalog_file: str):
 
 	# Only keep OPs with questions
 	ops = [op for op in ops if op["questions"]]
+
+	# Skip OPs with questions and enough replies that we've processed before
+	processed_ops_json = "data/processed_ids.json"
+	if not os.path.isfile(processed_ops_json):
+		json.dump([], open(processed_ops_json, "w"))
+	processed_ops = json.load(open(processed_ops_json))
+	ops = [op for op in ops if op["id"] not in processed_ops]
+
+	if not ops:
+		return
+
+	print(f"Processing new {len(ops)} OPs from {catalog_file}")
 
 	# Create a dictionary *per question* instead of per OP
 	questions = []
@@ -234,6 +216,9 @@ def process(catalog_file: str):
 	# Get rid of overly long questions that mess up the token length
 	questions = [q for q in questions if len(q["question"]) < config.MAX_QUESTION_LENGTH]
 	print(f"  {len(questions)} questions extracted")
+
+	if not questions:
+		return
 
 	# Slice if we're debugging
 	if config.DEBUG_LENGTH:
@@ -256,7 +241,7 @@ def process(catalog_file: str):
 
 			questions_simple = simplify_and_contextualise_questions(questions_flat)
 
-			# Check if the input v output length is the same
+			# Check if the input and output length is the same
 			if len(questions_simple) != len(q_chunk):
 				print(f"  The LLM output is not the same length as the input ({len(questions_simple)} vs {len(q_chunk)}). Trying again.")
 				retries += 1
@@ -265,14 +250,17 @@ def process(catalog_file: str):
 			# Add to original dataset
 			for q_simple in questions_simple:
 				questions[i]["question_simplified_contextualized"] = q_simple["question_simplified_contextualized"]
-				questions[i]["subject"] = q_simple["subject"].lower().strip()
+				subject = q_simple.get("subject", "")
+				if subject:
+					questions[i]["subject"] = subject.lower().strip()
+				else:
+					questions[i]["subject"] = ""
 				i += 1
 
 			print(f"  Simplified {i}/{len(questions)} questions")
 			break
 
 		time.sleep(1)
-
 
 	# SCORE EXPLICITNESS
 	print(f"Categorizing whether {len(questions)} questions are explicit or not.")
@@ -307,16 +295,16 @@ def process(catalog_file: str):
 	for i in range(len(questions)):
 		questions[i]["toxicity"] = toxicity_scores[i]
 
-	# SAVE AS CATALOG-SPECIFIC CSV
+	# SAVE AS CATALOG-SPECIFIC JSON AND CSV
+	catalog_filename = catalog_file[:-5] + "_questions"
+	with open(f"{catalog_filename}.json", "w", encoding="utf-8") as out_json:
+		json.dump(questions, out_json)
 	df = pd.DataFrame(questions)
-	if not os.path.isdir("data/catalog_questions"):
-		os.mkdir("data/catalog_questions")
-
-	catalog_filename = catalog_file.split('\\')[-1][:-5]
-	df.to_csv(f"data/catalog_questions/questions_{catalog_filename}.csv", index=False)
+	df.to_csv(f"{catalog_filename}.csv", index=False)
 
 	# THEN MERGE WITH PROCESSED DATA AND RANK
 	# Save what IDs we've processed (with valid questions or not)
+	op_ids = [op["id"] for op in ops]
 	processed_ids = list(set(processed_ops + op_ids))
 	with open(processed_ops_json, "w") as out_json:
 		json.dump(processed_ids, out_json)
@@ -349,7 +337,7 @@ def process(catalog_file: str):
 				"subject": question["subject"],
 				"subjects_all": [question["subject"]],
 				"explicit": question["explicit"],
-				"explicit_all": question["explicit"],
+				"explicit_all": [question["explicit"]],
 				**[question["toxicity"]][0],
 				"questions_original": [question["question"]],
 				"ids": [question["id"]],
@@ -386,6 +374,8 @@ def process(catalog_file: str):
 			old_question["questions_original"].append(question["question"])
 			old_question["ids"].append(question["id"])
 			old_question["timestamps"].append(question["timestamp_utc"])
+
+			all_questions[question_hash] = old_question
 
 	# Perspective API is deterministic so should remain the same
 
