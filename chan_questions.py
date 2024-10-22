@@ -138,7 +138,7 @@ def get_toxicity_scores(texts: list) -> list:
 		print(f"  Scored {i}/{len(texts)} questions")
 
 		# Don't exceed the rate limit
-		time.sleep(3)
+		time.sleep(5)
 
 	return results
 
@@ -177,6 +177,7 @@ def process(catalog_file: str):
 
 	"""
 	catalog = json.load(open(catalog_file))
+	board_name = os.path.basename(catalog_file).split("_")[0]
 	ops = parse_ops_from_catalog(catalog)
 
 	# Only keep OPs that generated X replies
@@ -199,7 +200,7 @@ def process(catalog_file: str):
 	if not ops:
 		return
 
-	print(f"Processing new {len(ops)} OPs from {catalog_file}")
+	print(f"Processing new {len(ops)} OPs from {board_name}/{catalog_file}")
 
 	# Create a dictionary *per question* instead of per OP
 	questions = []
@@ -321,6 +322,9 @@ def process(catalog_file: str):
 	# This way we can better group and count the questions.
 	questions_hashed = {clean_and_hash(q["question_simplified_contextualized"]): q for q in questions}
 
+	board_counts = {board + "_count": 0 for board in list(config.CATALOGS.keys())}
+	board_counts[board_name + "_count"] = 1
+
 	# Merge new questions with old questions.
 	# Update stuff like reply counts.
 	for question_hash, question in questions_hashed.items():
@@ -332,8 +336,7 @@ def process(catalog_file: str):
 				"question_simplified_contextualized": question["question_simplified_contextualized"],
 				"count": 1,
 				"replies": question["replies"],
-				"pol_count": 1 if "4chan" in catalog_file else 0,
-				"leftypol_count": 1 if "leftypol" in catalog_file else 0,
+				**board_counts,
 				"subject": question["subject"],
 				"subjects_all": [question["subject"]],
 				"explicit": question["explicit"],
@@ -353,10 +356,7 @@ def process(catalog_file: str):
 			old_question["count"] += 1
 
 			# Add occurrences per board
-			if "4chan" in catalog_file:
-				old_question["pol_count"] += 1
-			if "leftypol" in catalog_file:
-				old_question["leftypol_count"] += 1
+			old_question[board_name + "_count"] += 1
 
 			# Add to reply count
 			old_question["replies"] += question["replies"]
