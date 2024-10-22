@@ -126,6 +126,7 @@ def get_toxicity_scores(texts: list) -> list:
 		while retries < max_retries:
 			try:
 				response = client.comments().analyze(body=analyze_request).execute()
+				break
 			except HttpError as e:
 				if e.status_code == 429:
 					print("  Exceeded Perspective API rate limit, sleeping and trying again")
