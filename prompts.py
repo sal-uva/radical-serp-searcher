@@ -60,8 +60,8 @@ You are an expert in internet language and online discussions, tasked with class
 
 * **Examples:**
 	* "Do you agree, /pol/?"
-	* "What about Ukraine then?"
-	* "Is this another corruption thing?"
+	* "What do you think about Ukraine?"
+	* "Can I have fries with that?"
 	* "What's a better form of protest?"
 
 **Instructions:**
