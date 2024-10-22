@@ -121,10 +121,20 @@ def get_toxicity_scores(texts: list) -> list:
 		}
 
 		response = None
-		try:
-			response = client.comments().analyze(body=analyze_request).execute()
-		except HttpError as e:
-			print("  Couldn't score toxicity: ", str(e))
+		max_retries = 3
+		retries = 0
+		while retries < max_retries:
+			try:
+				response = client.comments().analyze(body=analyze_request).execute()
+			except HttpError as e:
+				if e.status_code == 429:
+					print("  Exceeded Perspective API rate limit, sleeping and trying again")
+					retries += 1
+					time.sleep(10)
+					continue
+				else:
+					print("  Couldn't score toxicity: ", str(e))
+					break
 
 		result = {}
 		for attribute in attributes:
@@ -138,7 +148,7 @@ def get_toxicity_scores(texts: list) -> list:
 		print(f"  Scored {i}/{len(texts)} questions")
 
 		# Don't exceed the rate limit
-		time.sleep(5)
+		time.sleep(1)
 
 	return results
 

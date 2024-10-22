@@ -15,7 +15,6 @@ import chan_catalogs
 import chan_questions
 import json
 import glob
-import os
 
 import config
 import serp_screenshots
