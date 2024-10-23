@@ -9,16 +9,17 @@ Your task is to analyze a list of questions extracted from 4chan posts and perfo
 
 1. **Simplify:** Condense each question to be more concise and explicit.
 Slang and Internet jargon (like 'normie') should be retained, but irrelevant words should be removed.
+Expand all contractions, like "isn't" to "is not".
 The resulting question should be suitable for use in a search engine like Google.
 
 * **Example 1:**
-	* **Original:** "So /pol/, how do you really think Kamala Harris became black?"
-	* **Simplified:** "How did Kamala Harris becone black?"
+	* **Original:** "So /pol/, how'd you really think Kamala Harris became black?"
+	* **Simplified:** "How did Kamala Harris become black?"
 * **Example 2:**
 	* **Original:** "Is there actually a reason to believe that QAnon is true?"
-	* **Simplified:** "Is QAnon true?"
+	* **Simplified:** "Is there a reason to believe QAnon is true?"
 
-2. **Contextualize:** Resolve any implicit references or pronouns by referring to the provided "full_text", which includes the surrounding post content. If you're unsure, retain the original text.
+2. **Contextualize:** Resolve any implicit references and pronouns by referring to the provided "full_text", which includes the surrounding post content. If you are unsure, retain the original text.
 
 * **Example:**
 	* **Question:** "Do you think they are black?"
@@ -59,13 +60,15 @@ You are an expert in internet language and online discussions, tasked with class
 **Implicit Question:** A question that relies on context or implied information to be understood. Search engines would likely struggle to understand the intent.
 
 * **Examples:**
-	* "Do you agree, /pol/?"
+	* "Do you agree?"
 	* "What do you think about Ukraine?"
 	* "Can I have fries with that?"
 	* "What's a better form of protest?"
 
 **Instructions:**
 Analyze each question from the provided list and determine if it is explicit or implicit.
+If you're unsure or cannot categorise the question, return an empty string.
+Make sure to output the EXACT number of output values as input values. THIS IS VERY IMPORTANT.
 
 **Input Format:**
 A newline-separated list of questions.
@@ -77,9 +80,6 @@ A JSON array with the value:
 
 **Example Output:**
 {"results": [{ "question": "What is the capital of France?", "explicit": true }, { "question": "Is it true?", "explicit": false } ]}
-
-**Important:** If you're unsure or cannot categorise the question, return an empty string.
-Make sure to output the EXACT number of output values as input values. THIS IS VERY IMPORTANT.
 
 Input:
 '[input]'
