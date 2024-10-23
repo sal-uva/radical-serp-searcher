@@ -101,7 +101,7 @@ def get_toxicity_scores(texts: list) -> list:
 			"v1alpha1",
 			developerKey=api_key,
 			discoveryServiceUrl="https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1",
-			static_discovery=False,
+			static_discovery=False
 		)
 	except HttpError as e:
 		error = json.loads(e.content)["error"]["message"]
@@ -117,7 +117,8 @@ def get_toxicity_scores(texts: list) -> list:
 	for text in texts:
 		analyze_request = {
 			"comment": {"text": text},
-			"requestedAttributes": api_attributes
+			"requestedAttributes": api_attributes,
+			"doNotStore": True
 		}
 
 		response = None
