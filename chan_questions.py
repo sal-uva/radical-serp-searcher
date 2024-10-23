@@ -206,7 +206,7 @@ def process(catalog_file: str):
 	if not os.path.isfile(processed_ops_json):
 		json.dump([], open(processed_ops_json, "w"))
 	processed_ops = json.load(open(processed_ops_json))
-	ops = [op for op in ops if op["id"] not in processed_ops]
+	#ops = [op for op in ops if op["id"] not in processed_ops]
 
 	if not ops:
 		return
@@ -315,11 +315,6 @@ def process(catalog_file: str):
 	df.to_csv(f"{catalog_filename}.csv", index=False)
 
 	# THEN MERGE WITH PROCESSED DATA AND RANK
-	# Save what IDs we've processed (with valid questions or not)
-	op_ids = [op["id"] for op in ops]
-	processed_ids = list(set(processed_ops + op_ids))
-	with open(processed_ops_json, "w") as out_json:
-		json.dump(processed_ids, out_json)
 
 	# Also save a JSON and CSV on *all* questions
 	questions_json_file = "data/questions.json"
@@ -360,14 +355,19 @@ def process(catalog_file: str):
 
 		# Already-encountered question. Update some data!
 		else:
+
 			# Add some question data to existing data
 			old_question = all_questions[question_hash]
 
-			# Add total question occurrences
-			old_question["count"] += 1
+			# If it's from the same post ID for some reason, just skip
+			if question["ids"][0] in old_question["ids"]:
+				continue
 
 			# Add occurrences per board
 			old_question[board_name + "_count"] += 1
+
+			# Sum into total occurrences
+			old_question["count"] = sum([v for k, v in old_question.items() if k.endswith("_count")])
 
 			# Add to reply count
 			old_question["replies"] += question["replies"]
@@ -379,7 +379,7 @@ def process(catalog_file: str):
 
 			# Same for 'explicit'
 			old_question["explicit_all"].append(question["explicit"])
-			old_question["explicit"] = Counter(old_question["explicit"]).most_common(1)[0][0]
+			old_question["explicit"] = Counter(old_question["explicit_all"]).most_common(1)[0][0]
 
 			# Other metadata
 			old_question["questions_original"].append(question["question"])
@@ -396,3 +396,10 @@ def process(catalog_file: str):
 
 	df = pd.DataFrame(all_questions.values())
 	df.to_csv(questions_csv_file, index=False)
+
+
+	# Save what IDs we've processed (with valid questions or not)
+	op_ids = [op["id"] for op in ops]
+	processed_ids = list(set(processed_ops + op_ids))
+	with open(processed_ops_json, "w") as out_json:
+		json.dump(processed_ids, out_json)
