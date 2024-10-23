@@ -33,4 +33,11 @@ TOKEN_4CAT = "XXX"
 # https://github.com/digitalmethodsinitiative/4cat_web_studies_extensions/tree/main
 URL_4CAT = "XXX"
 
+TAKE_SCREENSHOTS = False
+
+# Selenium settings
+SELENIUM_WAIT_TIME = 6
+SELENIUM_PAUSE_TIME = 5
+SELENIUM_RESOLUTION = "1280x720"
+
 DEBUG_LENGTH = 0			# Only process this many questions for debugging. Set to 0 or False to skip.

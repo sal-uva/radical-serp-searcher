@@ -18,7 +18,11 @@ import json
 import re
 import os
 import time
+import asyncio
 import pandas as pd
+import openai
+
+from datetime import datetime
 
 from collections import Counter
 from googleapiclient.errors import HttpError
@@ -87,7 +91,7 @@ def score_explicit_question(string: str) -> list:
 	return results
 
 
-def get_toxicity_scores(texts: list) -> list:
+async def get_toxicity_scores_perspective(texts: list) -> list:
 	"""
 	Score texts with toxicity scores through Google Jigsaw's Perspective API.
 	"""
@@ -147,12 +151,51 @@ def get_toxicity_scores(texts: list) -> list:
 
 		results.append(result)
 		i += 1
-		print(f"  Scored {i}/{len(texts)} questions")
+		print(f"  Scored {i}/{len(texts)} questions with Perspective API")
 
 		# Don't exceed the rate limit
 		time.sleep(2)
 
 	return results
+
+
+async def get_toxicity_scores_openai(texts: list) -> list:
+	"""
+	Retrieve moderation scores from OpenAI.
+	"""
+	client = openai.OpenAI(api_key=config.OPENAI_KEY)
+	score_results = []
+
+	i = 0
+	for text in texts:
+
+		response = client.moderations.create(
+			model="omni-moderation-latest",
+			input=text
+		)
+
+		result = response.results[0].category_scores
+		clean_result = {"OPENAI_MOD_AVG": sum([r[1] for r in result]) / len([r for r in result])}
+		for r in result:
+			clean_result[r[0].upper()] = round(r[1], 9)
+		score_results.append(clean_result)
+
+		i += 1
+		print(f"  Scored {i}/{len(texts)} questions with OpenAI")
+		time.sleep(1)
+
+	return score_results
+
+
+async def get_toxicity_scores(texts: list) -> list:
+	task_1 = asyncio.create_task(get_toxicity_scores_perspective(texts))
+	task_2 = asyncio.create_task(get_toxicity_scores_openai(texts))
+
+	perspective_scores, openai_scores = await asyncio.gather(task_1, task_2)
+
+	toxicity_scores = [{"perspective": perspective_scores[i], "openai": openai_scores[i]} for i in range(len(texts))]
+
+	return toxicity_scores
 
 
 def parse_ops_from_catalog(in_catalog: list) -> list:
@@ -207,7 +250,7 @@ def process(catalog_file: str):
 	if not os.path.isfile(processed_ops_json):
 		json.dump([], open(processed_ops_json, "w"))
 	processed_ops = json.load(open(processed_ops_json))
-	#ops = [op for op in ops if op["id"] not in processed_ops]
+	ops = [op for op in ops if op["id"] not in processed_ops]
 
 	if not ops:
 		return
@@ -301,10 +344,12 @@ def process(catalog_file: str):
 			print(f"  Categorized {i}/{len(questions)} questions as explicit/implicit")
 			break
 
-	# SCORE WITH PERSPECTIVE API
+	# SCORE TOXICITY WITH PERSPECTIVE AND OPENAI
 	print(f"Scoring {len(questions)} questions with toxicity scores")
 	questions_input = [q["question_simplified_contextualized"] for q in questions]
-	toxicity_scores = get_toxicity_scores(questions_input)
+
+	toxicity_scores = asyncio.run(get_toxicity_scores(questions_input))
+
 	for i in range(len(questions)):
 		questions[i]["toxicity"] = toxicity_scores[i]
 
@@ -318,8 +363,8 @@ def process(catalog_file: str):
 	# THEN MERGE WITH PROCESSED DATA AND RANK
 
 	# Also save a JSON and CSV on *all* questions
-	questions_json_file = "data/questions.json"
-	questions_csv_file = "data/questions.csv"
+	questions_json_file = f"data/questions.json"
+	questions_csv_file = f"data/questions.csv"
 
 	all_questions = {}
 	if os.path.isfile(questions_json_file):
@@ -348,7 +393,8 @@ def process(catalog_file: str):
 				"subjects_all": [question["subject"]],
 				"explicit": question["explicit"],
 				"explicit_all": [question["explicit"]],
-				**[question["toxicity"]][0],
+				**[question["toxicity"]["perspective"]][0],
+				**[question["toxicity"]["openai"]][0],
 				"questions_original": [question["question"]],
 				"ids": [question["id"]],
 				"timestamps": [question["timestamp_utc"]]
@@ -361,7 +407,7 @@ def process(catalog_file: str):
 			old_question = all_questions[question_hash]
 
 			# If it's from the same post ID for some reason, just skip
-			if question["ids"][0] in old_question["ids"]:
+			if question["id"] in old_question["ids"]:
 				continue
 
 			# Add occurrences per board
@@ -397,7 +443,6 @@ def process(catalog_file: str):
 
 	df = pd.DataFrame(all_questions.values())
 	df.to_csv(questions_csv_file, index=False)
-
 
 	# Save what IDs we've processed (with valid questions or not)
 	op_ids = [op["id"] for op in ops]

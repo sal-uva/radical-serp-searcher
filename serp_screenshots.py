@@ -54,9 +54,9 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 		"datasource": "image-downloader-screenshots",
 		"query": "\n".join(query_questions),
 		"capture": "all",
-		"wait-time": 6,
-		"resolution": "1920x1080",
-		"pause-time": 10,
+		"wait-time": config.SELENIUM_WAIT_TIME,
+		"resolution": config.SELENIUM_RESOLUTION,
+		"pause-time": config.SELENIUM_PAUSE_TIME,
 		"ignore-cookies": ignore_cookies,
 		"frontend-confirm": True,
 		"label": f"serp-screenshots_{search_engine}_{timestamp}"
