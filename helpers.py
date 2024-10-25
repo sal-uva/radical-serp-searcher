@@ -46,13 +46,16 @@ def chunker(seq: list, size: int) -> Generator:
 	return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
-def get_openai_answer(prompt: str, response_format="json_object"):
+def get_openai_answer(prompt: str, response_format="json_object", model=None):
 	# initiate
 	client = openai.OpenAI(api_key=config.OPENAI_KEY)
 
+	if not model:
+		model = config.MODEL
+
 	# Get response
 	response = client.chat.completions.create(
-		model=config.MODEL,
+		model=model,
 		temperature=config.TEMPERATURE,
 		max_tokens=config.MAX_OUTPUT_TOKENS,
 		response_format={"type": response_format},
@@ -96,3 +99,25 @@ def clean_html(html_string: str) -> str:
 
 	return cleaned
 
+
+def query_to_search_url(query: str, search_engine="google") -> str:
+	"""
+	Converts a string query to a search engine query URL
+
+	"""
+
+	query = query.lower().strip().replace(" ", "+")
+
+	search_engine = search_engine.lower()
+	if search_engine == "google":
+		return f"https://www.google.com/search?q={query}"
+	elif search_engine == "duckduckgo":
+		return f"https://www.duckduckgo.com/?q={query}"
+	elif search_engine == "bing":
+		return f"https://www.bing.com/search?q={query}"
+	elif search_engine == "yahoo":
+		return f"https://www.yahoo.com/search?q={query}"
+	elif search_engine == "yandex":
+		return f"https://www.yandex.com/search?q={query}"
+	else:
+		raise Exception("Search engine not supported")
