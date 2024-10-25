@@ -24,6 +24,7 @@ MAX_OPENAI_RETRIES = 5		# How many times we retry the prompt if the input and ou
 
 # Google Perspective API key
 GOOGLE_KEY = "XXX"
+PERSPECTIVE_TIMEOUT = 2.5
 
 # 4CAT token
 TOKEN_4CAT = "XXX"
@@ -33,6 +34,9 @@ TOKEN_4CAT = "XXX"
 # https://github.com/digitalmethodsinitiative/4cat_web_studies_extensions/tree/main
 URL_4CAT = "XXX"
 
+# What to execute
+COLLECT_CATALOGS = False
+PROCESS_QUESTIONS = False
 TAKE_SCREENSHOTS = False
 
 # Selenium settings
