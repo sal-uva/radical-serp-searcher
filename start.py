@@ -27,21 +27,22 @@ if __name__ == '__main__':
 	# Prep work
 	make_dirs()
 
-	# Retrieve catalogs
-	chan_catalogs.collect()
+	if config.COLLECT_CATALOGS:
+		# Retrieve catalogs
+		chan_catalogs.collect()
 
-	# Extract questions for all catalog files that haven't been processed yet
-	unprocessed_catalog_files = []
-	processed_files = glob.glob("data/catalogs/**/*.json")
-	for f in glob.glob("data/catalogs/**/*.json"):
-		file_name = f.split(".")[-2] + ".csv"
-		if file_name not in processed_files and "questions" not in file_name:
-			print(file_name)
-			unprocessed_catalog_files.append(f)
+	if config.PROCESS_QUESTIONS:
+		# Extract questions for all catalog files that haven't been processed yet
+		unprocessed_catalog_files = []
+		processed_files = glob.glob("data/catalogs/**/*.json")
+		for f in processed_files:
+			file_name = f.split(".")[-2] + ".csv"
+			if file_name not in processed_files and "questions" not in file_name:
+				unprocessed_catalog_files.append(f)
 
-	# # Get questions from OPs and manipulate them with LLMs
-	for unprocessed_catalog_file in unprocessed_catalog_files:
-		chan_questions.process(unprocessed_catalog_file)
+		# Get questions from OPs and manipulate them with LLMs
+		for unprocessed_catalog_file in unprocessed_catalog_files:
+			chan_questions.process(unprocessed_catalog_file)
 
 	if config.TAKE_SCREENSHOTS:
 		# Retrieve extracted questions
