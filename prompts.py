@@ -84,3 +84,20 @@ A JSON array with the value:
 Input:
 '[input]'
 """
+
+SERP_INTERFACE_PROMPTS = """
+Extract a list of SERP interface snippets  from this [SEARCH_ENGINE] results page.
+Be sure to process the whole page. Group regular search results in a "search_results" object.
+Return a valid JSON array of objects with interface elements in the following format:
+```
+{
+	"name_of_interface_element1": {
+		// content of the interface element
+	},
+	"name_of_interface_element2": {
+		// content of the interface element
+	},
+	// etc.
+}
+```
+"""
