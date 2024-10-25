@@ -4,28 +4,7 @@ import time
 import json
 from datetime import datetime
 
-
-def query_to_search_url(query: str, search_engine="google") -> str:
-	"""
-	Converts a string query to a search engine query URL
-
-	"""
-
-	query = query.lower().strip().replace(" ", "+")
-
-	search_engine = search_engine.lower()
-	if search_engine == "google":
-		return f"https://www.google.com/search?q={query}"
-	elif search_engine == "duckduckgo":
-		return f"https://www.duckduckgo.com/?q={query}"
-	elif search_engine == "bing":
-		return f"https://www.bing.com/search?q={query}"
-	elif search_engine == "yahoo":
-		return f"https://www.yahoo.com/search?q={query}"
-	elif search_engine == "yandex":
-		return f"https://www.yandex.com/search?q={query}"
-	else:
-		raise Exception("Search engine not supported")
+from helpers import query_to_search_url
 
 
 def queue_screenshots_via_4cat(questions, search_engine="google"):
