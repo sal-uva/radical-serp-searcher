@@ -22,8 +22,6 @@ import asyncio
 import pandas as pd
 import openai
 
-from datetime import datetime
-
 from collections import Counter
 from googleapiclient.errors import HttpError
 from googleapiclient import discovery
@@ -31,7 +29,7 @@ from googleapiclient import discovery
 import config
 import prompts
 
-from helpers import get_openai_answer, chunker, clean_and_hash, clean_html
+from helpers import get_openai_answer, chunker, clean_and_hash, clean_html, query_to_search_url
 
 
 def extract_questions(string: str) -> list:
@@ -128,6 +126,8 @@ async def get_toxicity_scores_perspective(texts: list) -> list:
 		response = None
 		max_retries = 3
 		retries = 0
+		perspective_timeout = config.PERSPECTIVE_TIMEOUT
+		retry_timeout = 10
 		while retries < max_retries:
 			try:
 				response = client.comments().analyze(body=analyze_request).execute()
@@ -136,7 +136,8 @@ async def get_toxicity_scores_perspective(texts: list) -> list:
 				if e.status_code == 429:
 					print("  Exceeded Perspective API rate limit, sleeping and trying again")
 					retries += 1
-					time.sleep(10)
+					time.sleep(retry_timeout)
+					retry_timeout += 10
 					continue
 				else:
 					print("  Couldn't score toxicity: ", str(e))
@@ -154,7 +155,7 @@ async def get_toxicity_scores_perspective(texts: list) -> list:
 		print(f"  Scored {i}/{len(texts)} questions with Perspective API")
 
 		# Don't exceed the rate limit
-		time.sleep(2)
+		time.sleep(perspective_timeout)
 
 	return results
 
@@ -383,9 +384,12 @@ def process(catalog_file: str):
 
 		# New question
 		if question_hash not in all_questions:
+
 			all_questions[question_hash] = {
 				"hash": question_hash,
 				"question_simplified_contextualized": question["question_simplified_contextualized"],
+				"url_google": query_to_search_url(question["question_simplified_contextualized"], search_engine="google"),
+				"url_bing": query_to_search_url(question["question_simplified_contextualized"], search_engine="bing"),
 				"count": 1,
 				"replies": question["replies"],
 				**board_counts,
@@ -393,11 +397,11 @@ def process(catalog_file: str):
 				"subjects_all": [question["subject"]],
 				"explicit": question["explicit"],
 				"explicit_all": [question["explicit"]],
-				**[question["toxicity"]["perspective"]][0],
-				**[question["toxicity"]["openai"]][0],
 				"questions_original": [question["question"]],
 				"ids": [question["id"]],
-				"timestamps": [question["timestamp_utc"]]
+				"timestamps": [question["timestamp_utc"]],
+				**[question["toxicity"]["perspective"]][0],
+				**[question["toxicity"]["openai"]][0]
 			}
 
 		# Already-encountered question. Update some data!
