@@ -52,6 +52,7 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 	while retries <= max_retries:
 		try:
 			response = requests.post(url_4cat, data=query_4cat, headers=headers)
+			break
 		except Exception as e:
 			print(e)
 			retries += 1
