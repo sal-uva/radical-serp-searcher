@@ -44,11 +44,21 @@ def queue_screenshots_via_4cat(questions, search_engine="google"):
 	url_4cat = config.URL_4CAT + "/api/queue-query"
 	headers = {"Authentication": config.TOKEN_4CAT}
 
-	try:
-		response = requests.post(url_4cat, data=query_4cat, headers=headers)
-	except Exception as e:
-		print(e)
-		quit()
+	retries = 0
+	max_retries = 5
+	snooze_time = 5
+	response = None
+
+	while retries <= max_retries:
+		try:
+			response = requests.post(url_4cat, data=query_4cat, headers=headers)
+		except Exception as e:
+			print(e)
+			retries += 1
+			time.sleep(snooze_time)
+
+	if not response:
+		print("Couldn't connect to 4CAT, see errors above")
 
 	if response.status_code == 500:
 		print("4CAT encountered a server error, contact the admins")
