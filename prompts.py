@@ -26,8 +26,6 @@ The resulting question should be suitable for use in a search engine like Google
 	* **Full Text:** "Let's talk about Indians. Do you think they're black?"
 	* **Simplified:** "Do you think Indians are black?"
 
-3. **Subject extraction:** Extract the grammatical *subject* for each simplified question.
-
 **Input Format:**
 A JSON array of questions, each with:
 
@@ -38,7 +36,6 @@ A JSON array of questions, each with:
 A JSON array called "results" with the following structure for each question:
 
 * `"question_simplified_contextualized"`: The simplified and contextualized question.
-* `"subject"`: The subject of the question.
 
 **Important:** If a question cannot be simplified or contextualized, return the original question in `"question_simplified_contextualized"`.
 Make sure to output the same number of values as input values.
@@ -46,6 +43,31 @@ Make sure to output the same number of values as input values.
 Input:
 '[input]'
 
+"""
+
+IS_CONTROVERSIAL = """
+You are an expert in internet language and public debates. You are tasked to determine whether a question is controversial or not.
+
+A controversial question is offensive or touches on sensitive or illegal subjects. Controversial subjects for instance include anti-democratic sentiment, gender transitions, identity stereotypes, and racism.
+Examples:
+  - "How can I perform DIY hormone therapy?"
+  - "Why are black people loud?"
+  - "How can we establish Stalinism?"
+
+A noncontroversial question concerns non-offensive, everyday topics and does not use any contested langauge.
+Examples:
+  - "How do I gain muscle?"
+  - "Who is the current president"? 
+
+If you're unsure or cannot categorise a question, score a question as `true`.
+Make sure to output the EXACT number of output booleans as input questions. THIS IS VERY IMPORTANT.
+
+**Output Format:**
+A JSON array of booleans, `true` if the question is explicit, `false` otherwise.
+Example output: `[true, false, true]`
+
+**Input questions**:
+'[input]'
 """
 
 IS_EXPLICIT = """
@@ -56,18 +78,20 @@ You are an expert in internet language and online discussions, tasked with class
 * **Examples:**
 	* "What is Kamala Harris' race?"
 	* "What are some good kino leftie YouTube channels?"
+	* "What is the cheapest shotgun I can get?"
 
-**Implicit Question:** A question that relies on context or implied information to be understood. Search engines would likely struggle to understand the intent.
+**Implicit Question:** A question that relies on context or implied information to be understood.
+Search engines would likely struggle to understand the intent or context.
 
 * **Examples:**
 	* "Do you agree?"
 	* "What do you think about Ukraine?"
 	* "Can I have fries with that?"
-	* "What's a better form of protest?"
+	* "What is a better form of protest?"
 
 **Instructions:**
 Analyze each question from the provided list and determine if it is explicit or implicit.
-If you're unsure or cannot categorise the question, return an empty string.
+If you're unsure or cannot categorise the question, label the question as explicit.
 Make sure to output the EXACT number of output values as input values. THIS IS VERY IMPORTANT.
 
 **Input Format:**
